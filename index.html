@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Snake Game</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   html, body {
     margin: 0;
@@ -23,6 +24,11 @@
 <body>
 <canvas id="board" width="600" height="600"></canvas>
 <script>
+if (window.Telegram && window.Telegram.WebApp) {
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
+
 // ---- constants (mirrors STARTING_POSITIONS / MOVE_DISTANCE / headings in snake.py) ----
 const MOVE_DISTANCE = 20;
 const UP = 90, DOWN = 270, LEFT = 180, RIGHT = 0;
@@ -182,8 +188,6 @@ function endGame() {
 }
 
 // ---- Telegram Mini App score hook ----
-// Sends the final score back to your bot/backend when the game ends.
-// Wire this up once your backend endpoint exists (see bot integration).
 function submitScore(finalScore) {
   const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "anonymous";
   const username = window.Telegram?.WebApp?.initDataUnsafe?.user?.username || null;
