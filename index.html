@@ -10,6 +10,7 @@
     padding: 0;
     background: black;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -17,16 +18,24 @@
     overflow: hidden;
     font-family: Courier, monospace;
   }
+  #scoreDisplay {
+    color: white;
+    font-family: Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
   #board {
     background: black;
     display: block;
     aspect-ratio: 1 / 1;
-    width: min(100vw, 100vh);
-    height: min(100vw, 100vh);
+    width: min(100vw, calc(100vh - 50px));
+    height: min(100vw, calc(100vh - 50px));
   }
 </style>
 </head>
 <body style="position: relative;">
+<div id="scoreDisplay">Score: 0</div>
 <canvas id="board" width="600" height="600"></canvas>
 <script>
 if (window.Telegram && window.Telegram.WebApp) {
@@ -40,11 +49,13 @@ const UP = 90, DOWN = 270, LEFT = 180, RIGHT = 0;
 const BOUNDARY = 280;
 const FOOD_CATCH_DIST = 15;
 const SELF_COLLIDE_DIST = 10;
+const FOOD_MARGIN = 20; // keeps food from spawning on/touching the wall line
 let TICK_MS = 100;
 let pointsPerFood = 1;
 
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
+const scoreDisplay = document.getElementById("scoreDisplay");
 const W = canvas.width, H = canvas.height;
 
 // convert turtle coords (origin center, y up) -> canvas coords (origin top-left, y down)
@@ -90,8 +101,9 @@ class Food {
     this.refresh();
   }
   refresh() {
-    this.x = Math.floor(Math.random() * (BOUNDARY * 2)) - BOUNDARY;
-    this.y = Math.floor(Math.random() * (BOUNDARY * 2)) - BOUNDARY;
+    const range = BOUNDARY - FOOD_MARGIN;
+    this.x = Math.floor(Math.random() * (range * 2)) - range;
+    this.y = Math.floor(Math.random() * (range * 2)) - range;
   }
 }
 
@@ -107,6 +119,10 @@ class Scoreboard {
 
 function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function updateScoreDisplay() {
+  scoreDisplay.textContent = `Score: ${scoreboard.score}`;
 }
 
 // ---- Game setup ----
@@ -156,8 +172,7 @@ function render() {
   // food (blue circle, shapesize 0.5 -> ~10px radius)
   drawCircle(food.x, food.y, 7, "#3498ff");
 
-  // scoreboard
-  drawText(0, 270, `Score: ${scoreboard.score}`, 24, "white");
+  updateScoreDisplay();
 }
 
 function tick() {
