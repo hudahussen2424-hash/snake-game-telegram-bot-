@@ -27,7 +27,7 @@
   }
 </style>
 </head>
-<body>
+<body style="position: relative;">
 <canvas id="board" width="600" height="600"></canvas>
 <script>
 if (window.Telegram && window.Telegram.WebApp) {
@@ -189,8 +189,43 @@ function endGame() {
   gameIsOn = false;
   clearInterval(intervalId);
   render();
-  drawText(0, 0, "GAME OVER", 24, "white");
+  drawText(0, -30, "GAME OVER", 24, "white");
   submitScore(scoreboard.score); // hook for Telegram / backend
+  showReplayButton();
+}
+
+function showReplayButton() {
+  const btn = document.createElement("button");
+  btn.textContent = "🔁 Play Again";
+  btn.style.position = "absolute";
+  btn.style.top = "60%";
+  btn.style.left = "50%";
+  btn.style.transform = "translate(-50%, -50%)";
+  btn.style.padding = "12px 24px";
+  btn.style.fontSize = "18px";
+  btn.style.fontFamily = "Courier, monospace";
+  btn.style.background = "white";
+  btn.style.color = "black";
+  btn.style.border = "none";
+  btn.style.borderRadius = "8px";
+  btn.style.cursor = "pointer";
+  btn.id = "replayBtn";
+
+  btn.onclick = () => {
+    btn.remove();
+    resetGame();
+  };
+
+  document.body.appendChild(btn);
+}
+
+function resetGame() {
+  snake = new Snake();
+  food = new Food();
+  scoreboard = new Scoreboard();
+  gameIsOn = true;
+  render();
+  intervalId = setInterval(tick, TICK_MS);
 }
 
 // ---- Telegram Mini App score hook ----
