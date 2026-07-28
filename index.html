@@ -171,11 +171,12 @@ function tick() {
     scoreboard.increaseScore(pointsPerFood);
   }
 
-  // wrap-around: re-emerge from the opposite wall instead of dying
-  if (snake.head.x > BOUNDARY) snake.head.x = -BOUNDARY;
-  if (snake.head.x < -BOUNDARY) snake.head.x = BOUNDARY;
-  if (snake.head.y > BOUNDARY) snake.head.y = -BOUNDARY;
-  if (snake.head.y < -BOUNDARY) snake.head.y = BOUNDARY;
+  // wrap-around: re-emerge flush with the drawn wall instead of dying
+  const SEG_HALF = 10; // half the snake segment's width
+  if (snake.head.x > BOUNDARY - SEG_HALF) snake.head.x = -(BOUNDARY - SEG_HALF);
+  if (snake.head.x < -(BOUNDARY - SEG_HALF)) snake.head.x = BOUNDARY - SEG_HALF;
+  if (snake.head.y > BOUNDARY - SEG_HALF) snake.head.y = -(BOUNDARY - SEG_HALF);
+  if (snake.head.y < -(BOUNDARY - SEG_HALF)) snake.head.y = BOUNDARY - SEG_HALF;
 
   for (const seg of snake.segments.slice(1)) {
     if (distance(snake.head, seg) < SELF_COLLIDE_DIST) {
