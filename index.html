@@ -185,15 +185,14 @@ function endGame() {
 // Sends the final score back to your bot/backend when the game ends.
 // Wire this up once your backend endpoint exists (see bot integration).
 function submitScore(finalScore) {
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.sendData(JSON.stringify({ score: finalScore }));
-  }
-  // Alternative: POST directly to your backend
-  // fetch("https://your-backend.up.railway.app/score", {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({ score: finalScore, telegram_id: window.Telegram?.WebApp?.initDataUnsafe?.user?.id })
-  // });
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "anonymous";
+  const username = window.Telegram?.WebApp?.initDataUnsafe?.user?.username || null;
+
+  fetch("https://snake-bot-backend-production.up.railway.app/score", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ telegramId, username, score: finalScore })
+  }).catch((err) => console.error("Failed to submit score:", err));
 }
 
 // ---- Controls ----
