@@ -20,10 +20,9 @@
   #board {
     background: black;
     display: block;
-    width: 100vw;
-    height: 100vw;
-    max-width: 100vh;
-    max-height: 100vh;
+    aspect-ratio: 1 / 1;
+    width: min(100vw, 100vh);
+    height: min(100vw, 100vh);
   }
 </style>
 </head>
@@ -41,7 +40,8 @@ const UP = 90, DOWN = 270, LEFT = 180, RIGHT = 0;
 const BOUNDARY = 280;
 const FOOD_CATCH_DIST = 15;
 const SELF_COLLIDE_DIST = 10;
-const TICK_MS = 100; // time.sleep(0.1)
+let TICK_MS = 100;
+let pointsPerFood = 1;
 
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
@@ -100,8 +100,8 @@ class Scoreboard {
   constructor() {
     this.score = 0;
   }
-  increaseScore() {
-    this.score += 1;
+  increaseScore(points) {
+    this.score += points;
   }
 }
 
@@ -113,7 +113,7 @@ function distance(a, b) {
 let snake = new Snake();
 let food = new Food();
 let scoreboard = new Scoreboard();
-let gameIsOn = true;
+let gameIsOn = false;
 let intervalId = null;
 
 function drawSquare(x, y, size, color) {
@@ -142,6 +142,12 @@ function drawText(x, y, text, size, color) {
 function render() {
   ctx.clearRect(0, 0, W, H);
 
+  // visible wall boundary
+  ctx.strokeStyle = "#444";
+  ctx.lineWidth = 2;
+  const { cx: x1, cy: y1 } = toCanvas(-BOUNDARY, BOUNDARY);
+  ctx.strokeRect(x1, y1, BOUNDARY * 2, BOUNDARY * 2);
+
   // snake segments (white squares, like Turtle("square"))
   for (const seg of snake.segments) {
     drawSquare(seg.x, seg.y, 20, "white");
@@ -162,7 +168,7 @@ function tick() {
   if (distance(snake.head, food) < FOOD_CATCH_DIST) {
     food.refresh();
     snake.extend();
-    scoreboard.increaseScore();
+    scoreboard.increaseScore(pointsPerFood);
   }
 
   if (
@@ -189,18 +195,12 @@ function endGame() {
   gameIsOn = false;
   clearInterval(intervalId);
   render();
-  drawText(0, -30, "GAME OVER", 24, "white");
+  drawText(0, 20, "GAME OVER", 24, "white");
   submitScore(scoreboard.score); // hook for Telegram / backend
   showReplayButton();
 }
 
-function showReplayButton() {
-  const btn = document.createElement("button");
-  btn.textContent = "🔁 Play Again";
-  btn.style.position = "absolute";
-  btn.style.top = "60%";
-  btn.style.left = "50%";
-  btn.style.transform = "translate(-50%, -50%)";
+function styleButton(btn) {
   btn.style.padding = "12px 24px";
   btn.style.fontSize = "18px";
   btn.style.fontFamily = "Courier, monospace";
@@ -209,17 +209,70 @@ function showReplayButton() {
   btn.style.border = "none";
   btn.style.borderRadius = "8px";
   btn.style.cursor = "pointer";
+  btn.style.width = "180px";
+}
+
+function showReplayButton() {
+  const btn = document.createElement("button");
+  btn.textContent = "🔁 Play Again";
+  styleButton(btn);
+  btn.style.position = "absolute";
+  btn.style.top = "68%";
+  btn.style.left = "50%";
+  btn.style.transform = "translate(-50%, -50%)";
   btn.id = "replayBtn";
 
   btn.onclick = () => {
     btn.remove();
-    resetGame();
+    showDifficultyMenu();
   };
 
   document.body.appendChild(btn);
 }
 
-function resetGame() {
+function showDifficultyMenu() {
+  const menu = document.createElement("div");
+  menu.id = "difficultyMenu";
+  menu.style.position = "absolute";
+  menu.style.top = "50%";
+  menu.style.left = "50%";
+  menu.style.transform = "translate(-50%, -50%)";
+  menu.style.display = "flex";
+  menu.style.flexDirection = "column";
+  menu.style.gap = "12px";
+  menu.style.alignItems = "center";
+
+  const title = document.createElement("div");
+  title.textContent = "Choose difficulty";
+  title.style.color = "white";
+  title.style.fontFamily = "Courier, monospace";
+  title.style.fontSize = "20px";
+  title.style.marginBottom = "8px";
+  menu.appendChild(title);
+
+  const difficulties = [
+    { label: "🟢 Easy — 1 pt/food", tick: 150, points: 1 },
+    { label: "🟡 Medium — 2 pt/food", tick: 100, points: 2 },
+    { label: "🔴 Hard — 3 pt/food", tick: 60, points: 3 },
+  ];
+
+  difficulties.forEach((d) => {
+    const btn = document.createElement("button");
+    btn.textContent = d.label;
+    styleButton(btn);
+    btn.onclick = () => {
+      TICK_MS = d.tick;
+      pointsPerFood = d.points;
+      menu.remove();
+      startGame();
+    };
+    menu.appendChild(btn);
+  });
+
+  document.body.appendChild(menu);
+}
+
+function startGame() {
   snake = new Snake();
   food = new Food();
   scoreboard = new Scoreboard();
@@ -267,8 +320,7 @@ canvas.addEventListener("touchend", (e) => {
 });
 
 // ---- Start ----
-render();
-intervalId = setInterval(tick, TICK_MS);
+showDifficultyMenu();
 </script>
 </body>
 </html>
