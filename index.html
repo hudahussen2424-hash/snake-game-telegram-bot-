@@ -164,9 +164,9 @@ function render() {
   const { cx: x1, cy: y1 } = toCanvas(-BOUNDARY, BOUNDARY);
   ctx.strokeRect(x1, y1, BOUNDARY * 2, BOUNDARY * 2);
 
-  // snake segments (white squares, like Turtle("square"))
+  // snake segments (white squares, slightly smaller than move distance so gaps show)
   for (const seg of snake.segments) {
-    drawSquare(seg.x, seg.y, 20, "white");
+    drawSquare(seg.x, seg.y, 17, "white");
   }
 
   // food (blue circle, shapesize 0.5 -> ~10px radius)
