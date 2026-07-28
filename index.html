@@ -171,15 +171,11 @@ function tick() {
     scoreboard.increaseScore(pointsPerFood);
   }
 
-  if (
-    snake.head.x > BOUNDARY ||
-    snake.head.x < -BOUNDARY ||
-    snake.head.y > BOUNDARY ||
-    snake.head.y < -BOUNDARY
-  ) {
-    endGame();
-    return;
-  }
+  // wrap-around: re-emerge from the opposite wall instead of dying
+  if (snake.head.x > BOUNDARY) snake.head.x = -BOUNDARY;
+  if (snake.head.x < -BOUNDARY) snake.head.x = BOUNDARY;
+  if (snake.head.y > BOUNDARY) snake.head.y = -BOUNDARY;
+  if (snake.head.y < -BOUNDARY) snake.head.y = BOUNDARY;
 
   for (const seg of snake.segments.slice(1)) {
     if (distance(snake.head, seg) < SELF_COLLIDE_DIST) {
