@@ -201,22 +201,22 @@ function endGame() {
 }
 
 function styleButton(btn) {
-  btn.style.padding = "8px 14px";
-  btn.style.fontSize = "14px";
+  btn.style.padding = "6px 12px";
+  btn.style.fontSize = "13px";
   btn.style.fontFamily = "Courier, monospace";
-  btn.style.letterSpacing = "0.5px";
   btn.style.background = "white";
   btn.style.color = "black";
   btn.style.border = "none";
   btn.style.borderRadius = "6px";
   btn.style.cursor = "pointer";
-  btn.style.width = "140px";
+  btn.style.width = "110px";
 }
 
 function showReplayButton() {
   const btn = document.createElement("button");
   btn.textContent = "🔁 Play Again";
   styleButton(btn);
+  btn.style.width = "130px";
   btn.style.position = "absolute";
   btn.style.top = "68%";
   btn.style.left = "50%";
@@ -240,7 +240,7 @@ function showDifficultyMenu() {
   menu.style.transform = "translate(-50%, -50%)";
   menu.style.display = "flex";
   menu.style.flexDirection = "column";
-  menu.style.gap = "12px";
+  menu.style.gap = "10px";
   menu.style.alignItems = "center";
 
   const title = document.createElement("div");
@@ -248,13 +248,13 @@ function showDifficultyMenu() {
   title.style.color = "white";
   title.style.fontFamily = "Courier, monospace";
   title.style.fontSize = "16px";
-  title.style.marginBottom = "8px";
+  title.style.marginBottom = "6px";
   menu.appendChild(title);
 
   const difficulties = [
-    { label: "🟢 Easy — 1 pt/food", tick: 150, points: 1 },
-    { label: "🟡 Medium — 2 pt/food", tick: 100, points: 2 },
-    { label: "🔴 Hard — 3 pt/food", tick: 60, points: 3 },
+    { label: "🟢 Easy", tick: 150, points: 1 },
+    { label: "🟡 Medium", tick: 100, points: 2 },
+    { label: "🔴 Hard", tick: 60, points: 3 },
   ];
 
   difficulties.forEach((d) => {
