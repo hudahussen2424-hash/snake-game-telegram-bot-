@@ -184,6 +184,7 @@ function tick() {
     food.refresh();
     snake.extend();
     scoreboard.increaseScore(pointsPerFood);
+    submitLiveScore(scoreboard.score);
   }
 
   // wrap-around: re-emerge flush with the drawn wall instead of dying
@@ -297,7 +298,7 @@ function startGame() {
   intervalId = setInterval(tick, TICK_MS);
 }
 
-// ---- Telegram Mini App score hook ----
+// ---- Telegram Mini App score hooks ----
 function submitScore(finalScore) {
   const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "anonymous";
   const username = window.Telegram?.WebApp?.initDataUnsafe?.user?.username || null;
@@ -307,6 +308,16 @@ function submitScore(finalScore) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ telegramId, username, score: finalScore })
   }).catch((err) => console.error("Failed to submit score:", err));
+}
+
+function submitLiveScore(currentScore) {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "anonymous";
+
+  fetch("https://snake-bot-backend-production.up.railway.app/score/live", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ telegramId, score: currentScore })
+  }).catch(() => {}); // fire-and-forget, don't interrupt gameplay if it fails
 }
 
 // ---- Controls ----
