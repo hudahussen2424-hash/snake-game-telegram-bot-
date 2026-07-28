@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: Courier, monospace;
+  }
+  #board {
+    background: black;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="board" width="600" height="600"></canvas>
+<script>
+// ---- constants (mirrors STARTING_POSITIONS / MOVE_DISTANCE / headings in snake.py) ----
+const MOVE_DISTANCE = 20;
+const UP = 90, DOWN = 270, LEFT = 180, RIGHT = 0;
+const BOUNDARY = 280;
+const FOOD_CATCH_DIST = 15;
+const SELF_COLLIDE_DIST = 10;
+const TICK_MS = 100; // time.sleep(0.1)
+
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+const W = canvas.width, H = canvas.height;
+
+// convert turtle coords (origin center, y up) -> canvas coords (origin top-left, y down)
+function toCanvas(x, y) {
+  return { cx: W / 2 + x, cy: H / 2 - y };
+}
+
+// ---- Snake ----
+class Snake {
+  constructor() {
+    this.segments = [
+      { x: 0, y: 0 },
+      { x: -20, y: 0 },
+      { x: -40, y: 0 }
+    ];
+    this.heading = RIGHT;
+  }
+  get head() {
+    return this.segments[0];
+  }
+  extend() {
+    const tail = this.segments[this.segments.length - 1];
+    this.segments.push({ x: tail.x, y: tail.y });
+  }
+  move() {
+    for (let i = this.segments.length - 1; i > 0; i--) {
+      this.segments[i].x = this.segments[i - 1].x;
+      this.segments[i].y = this.segments[i - 1].y;
+    }
+    const rad = (this.heading * Math.PI) / 180;
+    this.head.x += MOVE_DISTANCE * Math.cos(rad);
+    this.head.y += MOVE_DISTANCE * Math.sin(rad);
+  }
+  up() { if (this.heading !== DOWN) this.heading = UP; }
+  down() { if (this.heading !== UP) this.heading = DOWN; }
+  left() { if (this.heading !== RIGHT) this.heading = LEFT; }
+  right() { if (this.heading !== LEFT) this.heading = RIGHT; }
+}
+
+// ---- Food ----
+class Food {
+  constructor() {
+    this.refresh();
+  }
+  refresh() {
+    this.x = Math.floor(Math.random() * (BOUNDARY * 2)) - BOUNDARY;
+    this.y = Math.floor(Math.random() * (BOUNDARY * 2)) - BOUNDARY;
+  }
+}
+
+// ---- Scoreboard ----
+class Scoreboard {
+  constructor() {
+    this.score = 0;
+  }
+  increaseScore() {
+    this.score += 1;
+  }
+}
+
+function distance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+// ---- Game setup ----
+let snake = new Snake();
+let food = new Food();
+let scoreboard = new Scoreboard();
+let gameIsOn = true;
+let intervalId = null;
+
+function drawSquare(x, y, size, color) {
+  const { cx, cy } = toCanvas(x, y);
+  ctx.fillStyle = color;
+  ctx.fillRect(cx - size / 2, cy - size / 2, size, size);
+}
+
+function drawCircle(x, y, radius, color) {
+  const { cx, cy } = toCanvas(x, y);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawText(x, y, text, size, color) {
+  const { cx, cy } = toCanvas(x, y);
+  ctx.fillStyle = color;
+  ctx.font = `${size}px Courier`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, cx, cy);
+}
+
+function render() {
+  ctx.clearRect(0, 0, W, H);
+
+  // snake segments (white squares, like Turtle("square"))
+  for (const seg of snake.segments) {
+    drawSquare(seg.x, seg.y, 20, "white");
+  }
+
+  // food (blue circle, shapesize 0.5 -> ~10px radius)
+  drawCircle(food.x, food.y, 7, "#3498ff");
+
+  // scoreboard
+  drawText(0, 270, `Score: ${scoreboard.score}`, 24, "white");
+}
+
+function tick() {
+  if (!gameIsOn) return;
+
+  snake.move();
+
+  if (distance(snake.head, food) < FOOD_CATCH_DIST) {
+    food.refresh();
+    snake.extend();
+    scoreboard.increaseScore();
+  }
+
+  if (
+    snake.head.x > BOUNDARY ||
+    snake.head.x < -BOUNDARY ||
+    snake.head.y > BOUNDARY ||
+    snake.head.y < -BOUNDARY
+  ) {
+    endGame();
+    return;
+  }
+
+  for (const seg of snake.segments.slice(1)) {
+    if (distance(snake.head, seg) < SELF_COLLIDE_DIST) {
+      endGame();
+      return;
+    }
+  }
+
+  render();
+}
+
+function endGame() {
+  gameIsOn = false;
+  clearInterval(intervalId);
+  render();
+  drawText(0, 0, "GAME OVER", 24, "white");
+  submitScore(scoreboard.score); // hook for Telegram / backend
+}
+
+// ---- Telegram Mini App score hook ----
+// Sends the final score back to your bot/backend when the game ends.
+// Wire this up once your backend endpoint exists (see bot integration).
+function submitScore(finalScore) {
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.sendData(JSON.stringify({ score: finalScore }));
+  }
+  // Alternative: POST directly to your backend
+  // fetch("https://your-backend.up.railway.app/score", {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ score: finalScore, telegram_id: window.Telegram?.WebApp?.initDataUnsafe?.user?.id })
+  // });
+}
+
+// ---- Controls ----
+document.addEventListener("keydown", (e) => {
+  switch (e.key) {
+    case "ArrowUp": snake.up(); break;
+    case "ArrowDown": snake.down(); break;
+    case "ArrowLeft": snake.left(); break;
+    case "ArrowRight": snake.right(); break;
+  }
+});
+
+// basic touch swipe support (useful inside Telegram's WebView on mobile)
+let touchStartX = 0, touchStartY = 0;
+canvas.addEventListener("touchstart", (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+});
+canvas.addEventListener("touchend", (e) => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    dx > 0 ? snake.right() : snake.left();
+  } else {
+    dy > 0 ? snake.down() : snake.up();
+  }
+});
+
+// ---- Start ----
+render();
+intervalId = setInterval(tick, TICK_MS);
+</script>
+</body>
+</html>
