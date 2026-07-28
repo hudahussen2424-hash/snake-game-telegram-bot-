@@ -203,24 +203,26 @@ function endGame() {
 function styleButton(btn) {
   btn.style.padding = "6px 12px";
   btn.style.fontSize = "13px";
-  btn.style.fontFamily = "Courier, monospace";
+  btn.style.fontFamily = "Tahoma, sans-serif";
+  btn.style.fontWeight = "bold";
   btn.style.background = "white";
   btn.style.color = "black";
   btn.style.border = "none";
   btn.style.borderRadius = "6px";
   btn.style.cursor = "pointer";
-  btn.style.width = "110px";
+  btn.style.width = "120px";
+  btn.style.textAlign = "left";
 }
 
 function showReplayButton() {
   const btn = document.createElement("button");
   btn.textContent = "🔁 Play Again";
   styleButton(btn);
-  btn.style.width = "130px";
   btn.style.position = "absolute";
   btn.style.top = "68%";
   btn.style.left = "50%";
   btn.style.transform = "translate(-50%, -50%)";
+  btn.style.textAlign = "center";
   btn.id = "replayBtn";
 
   btn.onclick = () => {
@@ -246,7 +248,8 @@ function showDifficultyMenu() {
   const title = document.createElement("div");
   title.textContent = "Choose difficulty";
   title.style.color = "white";
-  title.style.fontFamily = "Courier, monospace";
+  title.style.fontFamily = "Tahoma, sans-serif";
+  title.style.fontWeight = "bold";
   title.style.fontSize = "16px";
   title.style.marginBottom = "6px";
   menu.appendChild(title);
